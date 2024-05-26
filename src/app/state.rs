@@ -1,25 +1,24 @@
+pub enum CurrentPage {
+    Login,
+    Loading
+}
+
 pub struct App {
-    is_logged: bool,
-    database_credentials: Option<DBCred>,
+    pub current_page:  CurrentPage,
+    pub is_logged: bool,
 }
 
 impl App {
     pub fn new() -> App {
         App {
+            current_page: CurrentPage::Login,
             is_logged: false,
-            database_credentials: None,
         }
     }
 
-    pub fn login(&mut self, db: DBCred) {
+    pub fn login(&mut self) {
+        self.current_page = CurrentPage::Loading;
         self.is_logged = true;
-        self.database_credentials = Some(db);
     }
 }
 
-pub struct DBCred {
-    pub db_name: String,
-    pub password: String,
-    pub user_name: String,
-    pub port: u8,
-}
