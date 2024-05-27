@@ -1,7 +1,7 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    style::Style,
-    widgets::{Block, Borders, Paragraph, Widget},
+    style::{Style, Stylize},
+    widgets::{Block, BorderType, Borders, Padding, Paragraph, Widget},
 };
 
 #[derive(Debug)]
@@ -59,40 +59,71 @@ impl ConnectionForm {
 
 impl Widget for &mut ConnectionForm {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
+        let centered_rect = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(vec![
+                Constraint::Min(1),
+                Constraint::Percentage(50),
+                Constraint::Min(1),
+            ])
+            .split(area);
+
         let form_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![
+                Constraint::Length(2),
                 Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Length(3),
             ])
-            .split(area);
+            .split(centered_rect[1]);
 
-        let mut database_block = Block::new().borders(Borders::ALL).title("DATABASE");
-        let mut port_block = Block::new().borders(Borders::ALL).title("PORT");
-        let mut user_block = Block::new().borders(Borders::ALL).title("USERNAME");
-        let mut password_block = Block::new().borders(Borders::ALL).title("PASSWORD");
+        let mut database_block = Block::new()
+            .borders(Borders::ALL)
+            .padding(Padding::vertical(0))
+            .border_type(BorderType::Rounded)
+            .title("DATABASE URL").padding(Padding::horizontal(1));
+        let mut port_block = Block::new()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .title("PORT").padding(Padding::horizontal(1));
+        let mut user_block = Block::new()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .title("USERNAME").padding(Padding::horizontal(1));
+        let mut password_block = Block::new()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .title("PASSWORD").padding(Padding::horizontal(1));
 
-        let active_style = Style::default().bg(ratatui::style::Color::Green);
+        let active_style = match self.mode {
+            EditMode::Normal => Style::new().green(),
+            EditMode::Insert => Style::new().red(),
+        };
         match self.currently_editing {
-            CurrentlyEditing::DatabaseURL => database_block = database_block.style(active_style),
-            CurrentlyEditing::Password => password_block = password_block.style(active_style),
-            CurrentlyEditing::Port => port_block = port_block.style(active_style),
-            CurrentlyEditing::UserName => user_block = user_block.style(active_style),
+            CurrentlyEditing::DatabaseURL => {
+                database_block = database_block.border_style(active_style)
+            }
+            CurrentlyEditing::Password => {
+                password_block = password_block.border_style(active_style)
+            }
+            CurrentlyEditing::Port => port_block = port_block.border_style(active_style),
+            CurrentlyEditing::UserName => user_block = user_block.border_style(active_style),
         }
 
+        Paragraph::new("FILL IN THE DETAILS TO CONTINUE").centered().render(form_layout[0], buf);
         Paragraph::new(self.database_url.clone())
             .block(database_block)
-            .render(form_layout[0], buf);
+            .render(form_layout[1], buf);
         Paragraph::new(self.port.clone())
             .block(port_block)
-            .render(form_layout[1], buf);
+            .render(form_layout[2], buf);
         Paragraph::new(self.user_name.clone())
             .block(user_block)
-            .render(form_layout[2], buf);
+            .render(form_layout[3], buf);
         Paragraph::new(self.password.clone())
             .block(password_block)
-            .render(form_layout[3], buf);
+            .render(form_layout[4], buf);
     }
 }
